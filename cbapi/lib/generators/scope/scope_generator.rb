@@ -41,9 +41,9 @@ class ScopeGenerator < Rails::Generators::Base
   end
 
   def scope_action
-    "  # GET /#{group_name}/#{scope_name.downcase}\n  # GET /#{group_name}/#{scope_name.downcase}.json\n  def #{scope_name.downcase}
+    "# GET /#{group_name}/#{scope_name.downcase}\n  # GET /#{group_name}/#{scope_name.downcase}.json\n  def #{scope_name.downcase}
     @#{group_name} = #{resource_name.singularize.camelcase}.#{scope_name.downcase}
-    \n    render json: @#{group_name}\n  end\n\n"
+    \n    render json: @#{group_name}\n  end\n\n  "
   end
 
   def scope
