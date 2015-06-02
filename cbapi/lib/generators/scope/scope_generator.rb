@@ -3,17 +3,19 @@ class ScopeGenerator < Rails::Generators::Base
   argument :resource_name, type: :string
   argument :scope_name, type: :string
 
-  def generate_scoped_route
-    resources_line = /resources :#{Regexp.quote(group_name)}, except: \[:new, :edit\]/i
+  def generate_scope_route
+    resources_do_line = /resources :#{Regexp.quote(group_name)}, except: \[:new, :edit\] do/i
+    resources_line = /resources :#{Regexp.quote(group_name)}, except: \[:new, :edit\]+(\s)*(?!.)/i
     in_root do
-      inject_into_file 'config/routes.rb', scoped_route, after: resources_line, verbose: false
+      inject_into_file 'config/routes.rb', scope_route, after: resources_do_line, verbose: false
+      inject_into_file 'config/routes.rb', scope_route_with_do, after: resources_line, verbose: false
     end
   end
 
-  def generate_scoped_action
+  def generate_scope_action
     private_line = /private/i
     in_root do
-      inject_into_file "app/controllers/#{group_name}_controller.rb", scoped_action, before: private_line, verbose: false
+      inject_into_file "app/controllers/#{group_name}_controller.rb", scope_action, before: private_line, verbose: false
     end
   end
 
@@ -30,14 +32,18 @@ class ScopeGenerator < Rails::Generators::Base
     resource_name.pluralize.underscore
   end
 
-  def scoped_route
-    "\n  get '#{scope_name.downcase}_#{group_name}', to: '#{group_name}#scoped', scope: :#{scope_name.downcase}"
+  def scope_route
+    "\n    get '#{scope_name.downcase}', on: :collection"
   end
 
-  def scoped_action
-    "  # GET /#{scope_name.downcase}_#{group_name}\n  # GET /#{scope_name.downcase}_#{group_name}.json\n  def scoped
-    @#{scope_name.downcase}_#{group_name} = #{resource_name.singularize.camelcase}.send(params[:scope])
-    \n    render json: @#{scope_name.downcase}_#{group_name}\n  end\n\n"
+  def scope_route_with_do
+    " do\n    get '#{scope_name.downcase}', on: :collection\n  end"
+  end
+
+  def scope_action
+    "  # GET /#{group_name}/#{scope_name.downcase}\n  # GET /#{group_name}/#{scope_name.downcase}.json\n  def #{scope_name.downcase}
+    @#{group_name} = #{resource_name.singularize.camelcase}.#{scope_name.downcase}
+    \n    render json: @#{group_name}\n  end\n\n"
   end
 
   def scope
